@@ -1,15 +1,27 @@
 import 'package:english_words/english_words.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'login.dart';
+import 'favoritesUtils.dart';
+import 'auth_state.dart';
+
 
 void main() {
   // runApp(const MyApp());
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(App());
+  runApp(
+    MultiProvider(providers: [
+      ChangeNotifierProvider(create: (context) => AuthUser.instance()),
+      ChangeNotifierProvider(create: (context) => UserFavorites())
+    ], child: App()),
+  );
 }
+
 
 class App extends StatelessWidget {
   final Future<FirebaseApp> _initialization = Firebase.initializeApp();
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -24,7 +36,7 @@ class App extends StatelessWidget {
       if (snapshot.connectionState == ConnectionState.done) {
         return MyApp();
       }
-      return Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
         },
     );
   }
@@ -72,34 +84,40 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   final _suggestions = <WordPair>[];
-  final _saved = <WordPair>{};
+  // final _saved = <WordPair>{};
   final _biggerFont = const TextStyle(fontSize: 18);
 
-  Widget _buildRow(WordPair pair) {
-    final alreadySaved = _saved.contains(pair);
-    return ListTile(
-      title: Text(
-        pair.asPascalCase,
-        style: _biggerFont,
-      ),
-      trailing: Icon(
-        alreadySaved ? Icons.star : Icons.star_border,
-        color: alreadySaved ? Colors.deepPurple : null,
-        semanticLabel: alreadySaved ? 'Remove from saved' : 'Save',
-      ),
-      onTap: () {
-        setState(() {
-          if (alreadySaved) {
-            _saved.remove(pair);
-          } else {
-            _saved.add(pair);
-          }
-        });
-      },
-    );
+  Widget _buildRow(WordPair pair, AuthUser authUser) {
+    // final alreadySaved = _saved.contains(pair);
+    return Consumer<UserFavorites>(builder: (context, userFavorites, child) {
+      final alreadySaved = userFavorites.favorties.contains(pair);
+      return ListTile(
+        title: Text(
+          pair.asPascalCase,
+          style: _biggerFont,
+        ),
+        trailing: Icon(
+          alreadySaved ? Icons.star : Icons.star_border,
+          color: alreadySaved ? Colors.deepPurple : null,
+          semanticLabel: alreadySaved ? 'Remove from saved' : 'Save',
+        ),
+        onTap: () {
+          // setState(() {
+            if (alreadySaved) {
+              //_saved.remove(pair);
+              userFavorites.removeFromFavorites(pair);
+            } else {
+              // _saved.add(pair);
+              userFavorites.addToFavorites(pair);
+            }
+          // });
+          userFavorites.updateToCloud(authUser);
+        },
+      );
+    });
   }
 
-  Widget _buildSuggestions() {
+  Widget _buildSuggestions(AuthUser authUser) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       // The itemBuilder callback is called once per suggested
@@ -125,22 +143,19 @@ class _RandomWordsState extends State<RandomWords> {
           // ...then generate 10 more and add them to the suggestions list.
           _suggestions.addAll(generateWordPairs().take(10));
         }
-        return _buildRow(_suggestions[index]);
+        return _buildRow(_suggestions[index], authUser);
       },
     );
   }
 
-  Future<bool> showSnackBarYam(BuildContext context) async {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Deletion is not implemented yet')));
-    return Future<bool>.value(false);
-  }
 
-  void _pushSaved() {
+
+  void _pushSaved(UserFavorites userFavorites, AuthUser authUser) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) {
-          final tiles = _saved.map(
+          // final tiles = _saved.map(
+          final tiles = userFavorites.favorties.map(
             (pair) {
               return ListTile(
                 title: Text(
@@ -157,108 +172,12 @@ class _RandomWordsState extends State<RandomWords> {
                 ).toList()
               : <Widget>[];
 
-
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Saved Suggestions'),
-            ),
-            // body: ListView(children: divided),
-            body: ListView.builder(
-              itemCount: divided.length,
-              itemBuilder: (BuildContext context, int index) {
-                return Dismissible(
-                    background: Container(
-                        alignment: Alignment.centerLeft,
-                        color: Colors.deepPurple,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Icon( // <-- Icon
-                              Icons.delete,
-                              color: Colors.white
-                          ),
-                          SizedBox(
-                            width: 5,
-                          ),
-                          Text(
-                            'Delete Suggestion',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
-                          ), // <-- Text
-                        ],
-                      ),
-                    ),
-                    key: ValueKey<Widget>(divided[index]),
-                    confirmDismiss: (DismissDirection direction) async {
-                      return await showSnackBarYam(context);
-                    },
-                    child: divided[index]);
-              },
-            ),
-          );
+          return favoriteScaffold(divided, userFavorites, authUser);
         },
       ),
     );
   }
 
-  Widget _buildLogin() {
-    return Form(
-        child: Column(
-      children: <Widget>[
-        Container(
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.all(10),
-          margin: const EdgeInsets.only(top: 20),
-          child: const Text(
-            'Welcome to Startup Names Generator, please log in below',
-            style: TextStyle(
-                color: Colors.black, fontWeight: FontWeight.w500, fontSize: 16),
-          ),
-        ),
-        Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(10),
-          child: TextFormField(
-            decoration: const InputDecoration(
-              // border: OutlineInputBorder(),
-              labelText: 'Email',
-            ),
-          ),
-        ),
-        Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(10),
-          child: TextFormField(
-            decoration: const InputDecoration(
-              // border: OutlineInputBorder(),
-              labelText: 'Password',
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.all(20),
-          width: double.infinity, // <-- match_parent
-          child: ElevatedButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Login is not implemented yet')),
-            );
-          },
-          style: ButtonStyle(
-              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18.0),
-          )),
-          // padding: MaterialStateProperty.all<Size>(const EdgeInsets.only(left: Size.infinite, right: 10))
-          ),
-          child: const Text('Log in')
-          ),
-        ),
-      ],
-    ));
-  }
 
   void _pushedLoginScreen() {
     Navigator.of(context).push(
@@ -270,7 +189,7 @@ class _RandomWordsState extends State<RandomWords> {
               title: const Text('Login',),
               centerTitle: true,
             ),
-            body: _buildLogin(),
+            body: const LoginForm(),
           );
         },
       ),
@@ -281,24 +200,45 @@ class _RandomWordsState extends State<RandomWords> {
   Widget build(BuildContext context) {
     // final wordPair = WordPair.random();
     // return Text(wordPair.asPascalCase);
-    return Scaffold (
-      appBar: AppBar(
-        title: const Text('Startup Name Generator'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.list),
-            onPressed: _pushSaved,
-            tooltip: 'Saved Suggestions',
-          ),
-          IconButton(
-            icon: const Icon(Icons.login),
-            onPressed: _pushedLoginScreen,
-            tooltip: 'Login Screen',
-          ),
-        ],
-      ),
-      body: _buildSuggestions(),
-    );
+    return Consumer<UserFavorites>(builder: (context, userFavorites, child){
+    return Consumer<AuthUser>(builder: (context, authUser, child) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Startup Name Generator'),
+          actions: [
+              IconButton(
+                icon: const Icon(Icons.star),
+                onPressed: () => _pushSaved(userFavorites, authUser),
+                tooltip: 'Saved Suggestions',
+              ),
+              Consumer<AuthUser>(builder: (context, authUser, child) {
+                if (authUser.status == Status.Authenticated) {
+                  // when changing the auth state here, meaning, logged-in, should pull
+                  // the favorites from the cloud and merge the local with the pulled
+                  // userFavorites.updateFromCloud(authUser);
+                  // userFavorites.updateToCloud(authUser);
+                  return IconButton(
+                    icon: const Icon(Icons.exit_to_app),
+                    onPressed: () {
+                      userFavorites.updateToCloudAndDeleteLocal(authUser);
+                      authUser.signOut(context);
+                    },
+                    tooltip: 'Log out',
+                  );
+                } else {
+                  return IconButton(
+                    icon: const Icon(Icons.login),
+                    onPressed: _pushedLoginScreen,
+                    tooltip: 'Login Screen',
+                  );
+                }
+              }),
+          ],
+        ),
+        body: _buildSuggestions(authUser),
+      );
+    });
+    });
   }
 }
 
