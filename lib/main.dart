@@ -213,10 +213,6 @@ class _RandomWordsState extends State<RandomWords> {
               ),
               Consumer<AuthUser>(builder: (context, authUser, child) {
                 if (authUser.status == Status.Authenticated) {
-                  // when changing the auth state here, meaning, logged-in, should pull
-                  // the favorites from the cloud and merge the local with the pulled
-                  // userFavorites.updateFromCloud(authUser);
-                  // userFavorites.updateToCloud(authUser);
                   return IconButton(
                     icon: const Icon(Icons.exit_to_app),
                     onPressed: () {

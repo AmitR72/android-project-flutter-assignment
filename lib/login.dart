@@ -88,21 +88,17 @@ class _LoginFormState extends State<LoginForm> {
                         bool res = await authUser
                             .signIn(context1, emailController.text,
                             passwordController.text);
-                         //    .then((value) {
-                         // if(value) userFavorites.updateFromCloud(authUser);});
-                        //userFavorites.updateFromCloud(authUser);
                         // Timer(Duration(seconds: 5), () {
                         //   print("Yeah, this line is printed after 3 seconds");
                         print ("@@@@@@@@@@@@@@@@@@@ res is $res");
                         if (!res){
-                          print ("@@@@@@@@@@@@@@@@@@@ res is res is false");
+                          print ("@@@@@@@@@@@@@@@@@@@ res is false");
                           await showSnackBar(context: context,
                               text: "There was an error logging into the app");
                         }
                           else{
                             Navigator.pop(context);
                             await userFavorites.updateFromCloud(authUser);
-                            print("%%%%%%%%%%%%%%% in LOGIN");
                             await userFavorites.updateToCloud(authUser);
                           }
                         // });
@@ -115,9 +111,7 @@ class _LoginFormState extends State<LoginForm> {
                             )),
                         // padding: MaterialStateProperty.all<Size>(const EdgeInsets.only(left: Size.infinite, right: 10))
                       ),
-                      child: //authUser.status == Status.Authenticating
-                          //? const CircularProgressIndicator(color: Colors.white)
-                            Text('Log in'));
+                      child: Text('Log in'));
                 });
               }),
             )],

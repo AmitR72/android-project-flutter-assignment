@@ -6,67 +6,6 @@ import 'utils.dart';
 
 enum Status { Uninitialized, Authenticated, Authenticating, Unauthenticated }
 
-
-// Future<Map<String, String>> signUp(String email, String password) async{
-//   print('************************in signup');
-//   Future<void> future = (await FirebaseInit()
-//       .db()
-//       .collection('users')
-//       .add({'password': password, 'favorites': null})) as Future<void>;
-//   // return UserData(email, password, null);
-//   return {'email': email, 'password': password};
-// }
-
-// Future<Map<String, String>> addUserDoc(String email, String password) async{
-//   print('************************in signup');
-//   Future<void> future = (await FirebaseInit()
-//       .db()
-//       .collection('users')
-//       .add([])) as Future<void>;
-//   // return UserData(email, password, null);
-//   return {'email': email, 'password': password};
-// }
-
-// Future<Map<String, String?>> getUser(String email, String password) async {
-//   String _email;
-//   String _password;
-//   print('************************in getUser');
-//   try {
-//     await FirebaseInit()
-//         .db()
-//         .collection('users')
-//         .doc(email)
-//         .get()
-//         .then((DocumentSnapshot ds) async {
-//       if (!ds.exists) {
-//         print('************************in getUser newUser');
-//         return await signUp(email, password);
-//       }
-//       else {
-//         _email = email;
-//         _password = ds["password"];
-//         print('************************in getUser old user');
-//         print('************************in getUser old user $email, $_email');
-//         print('************************in getUser old user $password, $_password');
-//         // getTypeName(dynamic obj) => obj.runtimeType;
-//         print('************************STAM');
-//         if (password != _password) {
-//           print('************************password != _password');
-//           //return null;
-//           return {'email': null, 'password': null};
-//         }
-//         UserData? user = UserData(email, password, null);
-//         print('************************ user ${user.email} ${user.password}');
-//         return {'email': email, 'password': password};
-//     }});
-//     return {'email': null, 'password': null};
-//   }catch(e){
-//     print("%%%%%%%%%%%%%%%%%% ERROR $e");
-//     // return null;
-//     return {'email': null, 'password': null};
-//   }
-// }
-
 class AuthUser extends ChangeNotifier {
   FirebaseAuth _auth;
   //UserData? _user;
@@ -107,34 +46,8 @@ class AuthUser extends ChangeNotifier {
         await _auth.signInWithEmailAndPassword(
             email: email, password: password);
       // });
-      print("###################################222 ${_status}");
+      print("################################### 2 ${_status}");
       return true;
-      // Timer(Duration(seconds: 2), () {
-      //     print("Yeah, this line is printed after 2 seconds");
-      //     // _status = Status.Authenticated;
-      //     // notifyListeners();
-      //   });
-      // Map<String,String?> m1 = await getUser(email, password);
-      // print("***** ${m1['email']} ${m1['password']} *****");
-      // UserData? user = UserData(m1['email'], m1['password'],null);
-      // print("###### ${user.email} ${user.password} #######");
-      // if (user.email != null && user.password != null) {
-      //   ///not null == we found/created a user
-      //   // await _auth.signInWithEmailAndPassword(email: email, password: password);
-      //   print("###### GOOD LOGIN #######");
-      //   showSnackBar(context: context, text: email + " " + password);
-      //   _status = Status.Authenticated;
-      //   notifyListeners();
-      //   // return true;
-      // }
-      // else {
-      //   _status = Status.Unauthenticated;
-      //   print("###### BAD LOGIN #######");
-      //   showSnackBar(context: context, text: "There was an error logging into the app");
-      //   notifyListeners();
-      //   // return true;
-      //   // return false;
-      // }
     } catch (e) {
       _status = Status.Unauthenticated;
       notifyListeners();
@@ -158,7 +71,7 @@ class AuthUser extends ChangeNotifier {
       _user = firebaseUser;
       _status = Status.Authenticated;
     }
-    print("###################################333 ${_status}");
+    print("################################### 3 ${_status}");
     notifyListeners();
   }
 }

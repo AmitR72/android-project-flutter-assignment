@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:hello_me/auth_state.dart';
 import 'cloud_firestore.dart';
 
-// List<WordPair> favoritesSuggestions = [];
 
 class UserFavorites extends ChangeNotifier{
   Set<WordPair> _favorties;
@@ -23,13 +22,13 @@ class UserFavorites extends ChangeNotifier{
   }
 
   Future<void> firstTimeSync(String email) async {
-    print("****** firstTimeSync");
+    print("****** firstTimeSync start");
     await FirebaseInit()
         .db()
         .collection('users')
         .doc(email)
         .set({'favorites': []});
-    print("****** firstTimeSync END");
+    print("****** firstTimeSync end");
   }
 
   Future<void> updateToCloud(AuthUser authUser) async {
@@ -57,11 +56,10 @@ class UserFavorites extends ChangeNotifier{
   Future<void> updateFromCloud(AuthUser authUser) async {
     print("****** updateFromCloud");
     String email = authUser.user?.email ?? "";
-    print("****** updateFromCloud 2.0 $email");
     if (email != "") {
       print("****** updateFromCloud 2 $email");
       if (authUser.isAuthenticated) {
-        print("****** updateFromCloud 3");
+        print("****** updateFromCloud auth true");
         try {
           await FirebaseInit()
               .db()
@@ -70,18 +68,16 @@ class UserFavorites extends ChangeNotifier{
               .get()
               .then((DocumentSnapshot ds) {
             if (!ds.exists) {
-              print("****** 000 firstTimeSync");
+              print("****** firstTimeSync start");
               firstTimeSync(email);
-              print("****** 111 firstTimeSync");
+              print("****** firstTimeSync end");
               updateToCloud(authUser);
-              print("****** 222 firstTimeSync updateToCloud");
+              print("****** updateToCloud end");
             } else {
               print("****** IN ELSE");
 
               ///combine favorites from cloud(db) and local
-              // _dbFavorites = ds["favorites"];
               List<dynamic> _dbFavorites = ds["favorites"];
-              print("****** 2222");
               Set<WordPair> _newSet = Set();
               if (_dbFavorites.isNotEmpty) {
                 for (int i = 0; i < _dbFavorites.length; i++) {
@@ -90,13 +86,8 @@ class UserFavorites extends ChangeNotifier{
                   WordPair pair = WordPair(_first, _second);
                   _newSet.add(pair);
                 }
-                // Set<WordPair> updatedFavorites = _dbFavorites as Set<WordPair>;
-                print("****** 3333");
-                // final unionSet = updatedFavorites.union(_favorties);
                 final unionSet = _newSet.union(_favorties);
-                print("****** 4444");
                 _favorties = unionSet;
-                print("****** 5555");
                 notifyListeners();
               }
             }
@@ -109,17 +100,12 @@ class UserFavorites extends ChangeNotifier{
   }
 
   Future<void> updateToCloudAndDeleteLocal(AuthUser authUser) async {
-    print("##### updateToCloudAndDeleteLocal 1111111111111111");
+    print("##### updateToCloudAndDeleteLocal 1");
     String email = authUser.user?.email ?? "";
     if (email != "") {
       if (authUser.isAuthenticated) {
-        print("##### updateToCloudAndDeleteLocal 22222222222222222");
+        print("##### updateToCloudAndDeleteLocal 2");
         try {
-              // FirebaseInit()
-              // .db()
-              // .collection('users')
-              // .doc(email)
-              // .set({'favorites': favorties});
           updateToCloud(authUser);
           _favorties = {};
           notifyListeners();
@@ -144,11 +130,9 @@ Future<Future<bool?>> showAlertDialogDel(BuildContext context, WordPair pair,
           TextButton(
             child: const Text('Approve'),
             onPressed: () {
-              print("@@@@@@@@@@@@@@@@@@@@@@@2 POP TRUE BEFORE");
               userFavorites.removeFromFavorites(pair);
-              print("@@@@@@@@@@@@@@@@@@@@@@@2 POP TRUE 2nd");
               userFavorites.updateToCloud(authUser);
-              print("@@@@@@@@@@@@@@@@@@@@@@@2 POP TRUE");
+              print("@@@@@@@@@@@@@@@@@@@@@@@ POP TRUE");
               Navigator.pop(context, true);
             },
           ),
@@ -210,35 +194,3 @@ Widget favoriteScaffold(List<Widget> divided, UserFavorites userFavorites,
     ),
   );
 }
-
-
-
-
-// Future<Map<String, String?>> getFavorite(String email, String password) async {
-//   String _email;
-//   String _password;
-//   try {
-//     await FirebaseInit()
-//         .db()
-//         .collection('users')
-//         .doc(email)
-//         .get()
-//         .then((DocumentSnapshot ds) async {
-//       if (!ds.exists) {
-//         return await signUp(email, password);
-//       }
-//       else {
-//         _email = email;
-//         _password = ds["password"];
-//         if (password != _password) {
-//           //return null;
-//         }
-//         UserData? user = UserData(email, password, null);
-//         return {'email': email, 'password': password};
-//       }});
-//     return {'email': null, 'password': null};
-//   }catch(e){
-//     // return null;
-//     return {'email': null, 'password': null};
-//   }
-// }
