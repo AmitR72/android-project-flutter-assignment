@@ -39,6 +39,10 @@ dependencies:
   english_words: ^4.0.0
   firebase_auth: ^3.3.12
   cloud_firestore: ^3.1.11
+  snapping_sheet: ^3.1.0
+  file_picker: ^4.5.1
+  firebase_storage: ^10.2.12
+  modal_bottom_sheet: ^2.0.1
 
 dev_dependencies:
   flutter_test:

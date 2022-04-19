@@ -27,7 +27,7 @@ class UserFavorites extends ChangeNotifier{
         .db()
         .collection('users')
         .doc(email)
-        .set({'favorites': []});
+        .set({'favorites': [], 'profilePic': null});
     print("****** firstTimeSync end");
   }
 
@@ -43,7 +43,7 @@ class UserFavorites extends ChangeNotifier{
               .db()
               .collection('users')
               .doc(email)
-              .set(favorties.isEmpty ?
+              .update(favorties.isEmpty ?
                   {'favorites': []} :
                   {'favorites': _toDb});
         } catch (e) {
